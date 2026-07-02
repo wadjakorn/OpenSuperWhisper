@@ -491,6 +491,20 @@ struct SettingsDownloadableModels {
             url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin?download=true")!,
             size: 574,
             description: "Fastest processing"
+        ),
+        SettingsDownloadableModel(
+            name: "Large V3 (full)",
+            isDownloaded: false,
+            url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin?download=true")!,
+            size: 3095,
+            description: "Best accuracy for non-English (Thai, etc.), slower"
+        ),
+        SettingsDownloadableModel(
+            name: "Large V3 (q5 balanced)",
+            isDownloaded: false,
+            url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin?download=true")!,
+            size: 1080,
+            description: "Strong non-English accuracy, smaller/faster than full"
         )
     ]
 }
