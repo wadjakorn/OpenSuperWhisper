@@ -11,6 +11,20 @@ import AppKit
 import Combine
 import UniformTypeIdentifiers
 
+enum AppPage {
+    case recordings
+    case settings
+
+    var windowWidth: CGFloat {
+        switch self {
+        case .recordings:
+            return 450
+        case .settings:
+            return 550
+        }
+    }
+}
+
 @main
 struct OpenSuperWhisperApp: App {
     @StateObject private var appState = AppState()
@@ -25,7 +39,7 @@ struct OpenSuperWhisperApp: App {
                     ContentView()
                 }
             }
-            .frame(width: 450)
+            .frame(width: appState.currentPage.windowWidth)
             .frame(minHeight: 400, maxHeight: 900)
             .environmentObject(appState)
         }
@@ -68,6 +82,11 @@ class AppState: ObservableObject {
             AppPreferences.shared.hasCompletedOnboarding = hasCompletedOnboarding
         }
     }
+    @Published var currentPage: AppPage = .recordings {
+        didSet {
+            NotificationCenter.default.post(name: .appPageChanged, object: currentPage)
+        }
+    }
 
     init() {
         var onboarding = AppPreferences.shared.hasCompletedOnboarding
@@ -86,6 +105,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var languageSubmenu: NSMenu?
     private var microphoneService = MicrophoneService.shared
     private var microphoneObserver: AnyCancellable?
+    private var pageObserver: AnyCancellable?
+    private var currentPage: AppPage = .recordings
     
     func applicationDidFinishLaunching(_ notification: Notification) {
 
@@ -96,11 +117,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             window.delegate = self
 
             window.minSize = NSSize(width: 450, height: 400)
-            window.maxSize = NSSize(width: 450, height: 900)
+            window.maxSize = NSSize(width: 550, height: 900)
         }
 
         OpenSuperWhisperApp.startTranscriptionQueue()
         observeMicrophoneChanges()
+        observePageChanges()
     }
 
     func application(_ sender: NSApplication, openFile filename: String) -> Bool {
@@ -151,6 +173,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             .sink { [weak self] _ in
                 self?.updateStatusBarMenu()
             }
+    }
+
+    private func observePageChanges() {
+        pageObserver = NotificationCenter.default.publisher(for: .appPageChanged)
+            .compactMap { $0.object as? AppPage }
+            .sink { [weak self] page in
+                self?.currentPage = page
+                self?.resizeMainWindow(for: page)
+            }
+    }
+
+    private func resizeMainWindow(for page: AppPage) {
+        guard let window = mainWindow else { return }
+
+        let targetWidth = page.windowWidth
+        let currentFrame = window.frame
+        let nextOriginX = currentFrame.origin.x + (currentFrame.width - targetWidth) / 2
+        let nextFrame = NSRect(
+            x: nextOriginX,
+            y: currentFrame.origin.y,
+            width: targetWidth,
+            height: currentFrame.height
+        )
+
+        window.minSize = NSSize(width: targetWidth, height: 400)
+        window.setFrame(nextFrame, display: true, animate: true)
     }
     
     private func setupStatusBarItem() {
@@ -334,6 +382,6 @@ extension AppDelegate: NSWindowDelegate {
     }
     
     func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
-        return NSSize(width: 450, height: frameSize.height)
+        return NSSize(width: currentPage.windowWidth, height: frameSize.height)
     }
 }
