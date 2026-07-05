@@ -294,8 +294,8 @@ class ContentViewModel: ObservableObject {
 struct ContentView: View {
     @StateObject private var viewModel = ContentViewModel()
     @StateObject private var permissionsManager = PermissionsManager()
+    @EnvironmentObject private var appState: AppState
     @Environment(\.colorScheme) private var colorScheme
-    @State private var isSettingsPresented = false
     @State private var searchText = ""
     @State private var debouncedSearchText = ""
     @State private var showDeleteConfirmation = false
@@ -334,9 +334,12 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            if !permissionsManager.isMicrophonePermissionGranted
-                || !permissionsManager.isAccessibilityPermissionGranted
-            {
+            if appState.currentPage == .settings {
+                SettingsView {
+                    appState.currentPage = .recordings
+                }
+            } else if !permissionsManager.isMicrophonePermissionGranted
+                || !permissionsManager.isAccessibilityPermissionGranted {
                 PermissionsView(permissionsManager: permissionsManager)
             } else {
                 VStack(spacing: 0) {
@@ -578,7 +581,7 @@ struct ContentView: View {
                                 }
                                 
                                 Button(action: {
-                                    isSettingsPresented.toggle()
+                                    appState.currentPage = .settings
                                 }) {
                                     Image(systemName: "gear")
                                         .font(.title3)
@@ -600,7 +603,7 @@ struct ContentView: View {
                 }
             }
         }
-        .frame(minWidth: 400, idealWidth: 400)
+        .frame(minWidth: appState.currentPage.windowWidth, idealWidth: appState.currentPage.windowWidth)
         .background(ThemePalette.windowBackground(colorScheme))
         .onAppear {
             viewModel.loadInitialData()
@@ -629,7 +632,7 @@ struct ContentView: View {
             let isPermissionsGranted = permissionsManager.isMicrophonePermissionGranted
                 && permissionsManager.isAccessibilityPermissionGranted
 
-            if viewModel.transcriptionService.isLoading && isPermissionsGranted {
+            if appState.currentPage == .recordings && viewModel.transcriptionService.isLoading && isPermissionsGranted {
                 ZStack {
                     Color.black.opacity(0.3)
                     VStack(spacing: 16) {
@@ -644,11 +647,8 @@ struct ContentView: View {
             }
         }
         .fileDropHandler()
-        .sheet(isPresented: $isSettingsPresented) {
-            SettingsView()
-        }
         .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
-            isSettingsPresented = true
+            appState.currentPage = .settings
         }
         .onChange(of: viewModel.shouldClearSearch) { _, shouldClear in
             if shouldClear {
