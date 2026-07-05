@@ -10,10 +10,13 @@ OpenSuperWhisper is a macOS application that provides real-time audio transcript
 
 - 🎙️ Real-time audio recording and transcription
 - 🧠 Two transcription engines: [Whisper](https://github.com/ggerganov/whisper.cpp) and [Parakeet](https://github.com/AntinomyCollective/FluidAudio) — download models directly from the app
+- 🌐 Thai language support with selectable `Thai` transcription language
+- 🗣️ Better Thai and other non-English accuracy with downloadable Whisper Large V3 models
 - ⌨️ Global keyboard shortcuts — key combination or single modifier key (e.g. Left ⌘, Right ⌥, Fn)
 - ✊ Hold-to-record mode — hold the shortcut to record, release to stop
 - 📁 Drag & drop audio files for transcription with queue processing
 - 🎤 Microphone selection — switch between built-in, external, Bluetooth and iPhone (Apple Continuity) mics from the menu bar
+- ⚙️ Settings open inside the main app window with a dedicated wider settings page
 - 🌍 Support for multiple languages with auto-detection
 - 🇯🇵🇨🇳🇰🇷 Asian language autocorrect ([autocorrect](https://github.com/huacnlee/autocorrect))
 
